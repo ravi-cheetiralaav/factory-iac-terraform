@@ -1,0 +1,27 @@
+{
+  "gitlab_base_url": "https://gitlab.prod.example.internal/api/v4/",
+  "artifactory_url": "https://jfrog.prod.example.internal/artifactory",
+  "gitlab": {
+    "groups": {
+      "engineering": {
+        "name": "Engineering Production",
+        "path": "engineering-prod",
+        "project_creation_level": "owner"
+      }
+    },
+    "projects": {
+      "application": { "name": "Sample Application", "path": "sample-application", "group_key": "engineering" }
+    }
+  },
+  "artifactory": {
+    "groups": { "platform-prod-readers": {} },
+    "local_generic_repositories": { "platform-prod-generic-local": {} },
+    "local_docker_repositories": { "platform-prod-docker-local": {} },
+    "permission_targets": {
+      "platform-prod-read": {
+        "repositories": ["platform-prod-generic-local", "platform-prod-docker-local"],
+        "group_permissions": { "platform-prod-readers": ["read"] }
+      }
+    }
+  }
+}

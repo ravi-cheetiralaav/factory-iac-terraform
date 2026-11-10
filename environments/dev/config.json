@@ -1,0 +1,55 @@
+{
+  "gitlab_base_url": "https://gitlab.dev.example.internal/api/v4/",
+  "artifactory_url": "https://jfrog.dev.example.internal/artifactory",
+  "gitlab": {
+    "groups": {
+      "engineering": { "name": "Engineering Dev", "path": "engineering-dev" }
+    },
+    "subgroups": {
+      "platform": { "name": "Platform", "path": "platform", "parent_group_key": "engineering" }
+    },
+    "users": {
+      "example.developer": { "name": "Example Developer", "email": "example.developer@example.internal" }
+    },
+    "group_memberships": {
+      "platform_developer": { "group_key": "platform", "username": "example.developer", "access_level": "developer" }
+    },
+    "projects": {
+      "application": {
+        "name": "Sample Application",
+        "path": "sample-application",
+        "group_key": "platform",
+        "description": "Development application repository",
+        "branch_protections": { "release/*": {} }
+      }
+    }
+  },
+  "artifactory": {
+    "groups": {
+      "platform-dev-developers": { "description": "Development artifact publishers" }
+    },
+    "users": {
+      "example.developer": { "email": "example.developer@example.internal", "groups": ["platform-dev-developers"] }
+    },
+    "local_generic_repositories": { "platform-dev-generic-local": {} },
+    "local_docker_repositories": { "platform-dev-docker-local": {} },
+    "virtual_generic_repositories": {
+      "platform-dev-generic": {
+        "repositories": ["platform-dev-generic-local"],
+        "default_deployment_repo": "platform-dev-generic-local"
+      }
+    },
+    "virtual_docker_repositories": {
+      "platform-dev-docker": {
+        "repositories": ["platform-dev-docker-local"],
+        "default_deployment_repo": "platform-dev-docker-local"
+      }
+    },
+    "permission_targets": {
+      "platform-dev-publish": {
+        "repositories": ["platform-dev-generic-local", "platform-dev-docker-local"],
+        "group_permissions": { "platform-dev-developers": ["read", "write", "annotate"] }
+      }
+    }
+  }
+}
