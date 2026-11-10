@@ -1,3 +1,13 @@
+output "project_keys" {
+  description = "JFrog project keys by GitLab configuration key"
+  value       = { for key, project in project_project.projects : key => project.key }
+}
+
+output "robot_usernames" {
+  description = "JFrog robot usernames by GitLab configuration key, without credentials"
+  value       = { for key, robot in artifactory_user.robots : key => robot.name }
+}
+
 output "repository_keys" {
   description = "Managed repository keys grouped by repository type"
   value = {

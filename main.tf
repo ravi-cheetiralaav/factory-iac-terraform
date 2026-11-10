@@ -7,5 +7,5 @@ module "gitlab" {
 module "artifactory" {
   source = "./modules/artifactory"
 
-  configuration = local.artifactory
+  configuration = merge(local.artifactory, { projects = local.jfrog_projects })
 }

@@ -1,0 +1,82 @@
+{
+  "jfrog_robot_email_domain": "example.internal",
+  "gitlab_base_url": "https://gitlab.lab01.example.internal/api/v4/",
+  "artifactory_url": "https://jfrog.lab01.example.internal/artifactory",
+  "gitlab": {
+    "groups": {
+      "platform": { "name": "Platform Group", "path": "platform" },
+      "capability-1": { "name": "Capability-1", "path": "capability-1" },
+      "capability-2": { "name": "Capability-2", "path": "capability-2" },
+      "capability-3": { "name": "Capability-3", "path": "capability-3" },
+      "capability-4": { "name": "Capability-4", "path": "capability-4" }
+    },
+    "subgroups": {
+      "platform-environment": { "name": "Environment", "path": "environment", "parent_group_key": "platform" },
+      "platform-devsecops": { "name": "DevSecOps", "path": "devsecops", "parent_group_key": "platform" },
+      "platform-cicd": { "name": "CICD-Templates", "path": "cicd-templates", "parent_group_key": "platform" },
+      "platform-security": { "name": "Security Engineering", "path": "security-engineering", "parent_group_key": "platform" },
+      "cap1-non-ec": { "name": "Non-EC-apps", "path": "non-ec-apps", "parent_group_key": "capability-1" },
+      "cap1-ec": { "name": "EC-apps", "path": "ec-apps", "parent_group_key": "capability-1" },
+      "cap2-non-ec": { "name": "Non-EC-apps", "path": "non-ec-apps", "parent_group_key": "capability-2" },
+      "cap2-ec": { "name": "EC-apps", "path": "ec-apps", "parent_group_key": "capability-2" },
+      "cap3-non-ec": { "name": "Non-EC-apps", "path": "non-ec-apps", "parent_group_key": "capability-3" },
+      "cap3-ec": { "name": "EC-apps", "path": "ec-apps", "parent_group_key": "capability-3" },
+      "cap4-non-ec": { "name": "Non-EC-apps", "path": "non-ec-apps", "parent_group_key": "capability-4" },
+      "cap4-ec": { "name": "EC-apps", "path": "ec-apps", "parent_group_key": "capability-4" }
+    },
+    "projects": {
+      "platform-iac": { "name": "Platform Iac", "path": "platform-iac", "group_key": "platform-environment" },
+      "environment-config": { "name": "Environment-Config", "path": "environment-config", "group_key": "platform-environment" },
+      "ansible-playbooks": { "name": "Ansible Playbooks", "path": "ansible-playbooks", "group_key": "platform-environment" },
+      "devops-iac": { "name": "DevOps-Iac", "path": "devops-iac", "group_key": "platform-devsecops" },
+      "bootstrap-scripts": { "name": "Bootstrap Scripts", "path": "bootstrap-scripts", "group_key": "platform-devsecops" },
+      "gitlab-cicd-templates": { "name": "gitlab-cicd-templates", "path": "gitlab-cicd-templates", "group_key": "platform-cicd" },
+      "policy-as-code": { "name": "Policy-as-code", "path": "policy-as-code", "group_key": "platform-security" },
+      "compliance-controls": { "name": "Compliance-Controls", "path": "compliance-controls", "group_key": "platform-security" },
+      "cap1-non-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap1-non-ec" },
+      "cap1-non-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap1-non-ec" },
+      "cap1-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap1-ec" },
+      "cap1-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap1-ec" },
+      "cap2-non-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap2-non-ec" },
+      "cap2-non-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap2-non-ec" },
+      "cap2-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap2-ec" },
+      "cap2-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap2-ec" },
+      "cap3-non-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap3-non-ec" },
+      "cap3-non-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap3-non-ec" },
+      "cap3-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap3-ec" },
+      "cap3-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap3-ec" },
+      "cap4-non-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap4-non-ec" },
+      "cap4-non-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap4-non-ec" },
+      "cap4-ec-app1": { "name": "App-1", "path": "app-1", "group_key": "cap4-ec" },
+      "cap4-ec-app2": { "name": "App-2", "path": "app-2", "group_key": "cap4-ec" }
+    }
+  },
+  "artifactory": {
+    "groups": {
+      "platform-lab01-developers": { "description": "Lab01 artifact publishers" }
+    },
+    "users": {
+      "example.developer": { "email": "example.developer@example.internal", "groups": ["platform-lab01-developers"] }
+    },
+    "local_generic_repositories": { "platform-lab01-generic-local": {} },
+    "local_docker_repositories": { "platform-lab01-docker-local": {} },
+    "virtual_generic_repositories": {
+      "platform-lab01-generic": {
+        "repositories": ["platform-lab01-generic-local"],
+        "default_deployment_repo": "platform-lab01-generic-local"
+      }
+    },
+    "virtual_docker_repositories": {
+      "platform-lab01-docker": {
+        "repositories": ["platform-lab01-docker-local"],
+        "default_deployment_repo": "platform-lab01-docker-local"
+      }
+    },
+    "permission_targets": {
+      "platform-lab01-publish": {
+        "repositories": ["platform-lab01-generic-local", "platform-lab01-docker-local"],
+        "group_permissions": { "platform-lab01-developers": ["read", "write", "annotate"] }
+      }
+    }
+  }
+}

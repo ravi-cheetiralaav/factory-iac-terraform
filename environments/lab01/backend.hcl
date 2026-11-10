@@ -1,5 +1,5 @@
-bucket = "REPLACE_WITH_PROD_STATE_BUCKET"
-key    = "factory-day2/prod/terraform.tfstate"
+bucket = "REPLACE_WITH_LAB01_STATE_BUCKET"
+key    = "factory-day2/lab01/terraform.tfstate"
 region = "REPLACE_WITH_GDC_SIGNING_REGION"
 
 endpoints = {

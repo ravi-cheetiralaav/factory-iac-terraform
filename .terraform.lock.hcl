@@ -44,3 +44,25 @@ provider "registry.terraform.io/jfrog/artifactory" {
     "zh:d686f1307315366ae389a74a1e83985c422ecbc15d82972d9cec971cdd75dd08",
   ]
 }
+
+provider "registry.terraform.io/jfrog/project" {
+  version     = "1.9.9"
+  constraints = ">= 1.9.9, 1.9.9, < 2.0.0"
+  hashes = [
+    "h1:7US/CagBQqSY3bsvWf2tF2L5mpw1LYFUhX1byPBQU6M=",
+    "zh:142ff8bf830be159625cb7ff5f7faa8019a70a45be6c60656f46f1eecab5bed1",
+    "zh:1fb9ae65b8372e110a312afee0bf5a5e8d983fc57bff55d260371c87a4089238",
+    "zh:23a3659229c2b994642ea2f823dae017e101201205b0e67fa5a2c1e53f37bb9b",
+    "zh:3fbf2f857479827f10bc82c3b0655bd1655b2bcabd08beabfc3f31a35f0b4c72",
+    "zh:453f2a3b2f224f9762dd554d8f7d9bb44cb6bbaea4158f1c9ad4dbcd6b1561e4",
+    "zh:709f7324813c018dfc40a28e9428d01a59f78b4d7f587b0a3839549777608336",
+    "zh:7224147c535be0b667bda2224bf0552a3784a0ef152988392138225ddc9eb20d",
+    "zh:7d4471dff6749a95afaf28acc2c7c04e04d7eb310d52eaeffa453cfcf681f639",
+    "zh:95d135b57b2372944e39f262bced824d66efbf519bfd26e966b058e924acc410",
+    "zh:9de697d66256a60a9ffe77d23838c7724f655fb919767f31107b7f003d05624b",
+    "zh:af1c4f785b3df1e126dc1b1ab4377d54272e44a816676fe0dd22fd741c5dae4a",
+    "zh:cbc45b93ae38108bcf5dbc1672f9e06f94deb66ce403db5efa5545abf32bfba3",
+    "zh:cf2ad3e93fdd891ab2de2705b967dba5c11c281b37c6454e858750784d596e87",
+    "zh:f809ab383cca0a5f83072981c64208cbd7fa67e986a86ee02dd2c82333221e32",
+  ]
+}

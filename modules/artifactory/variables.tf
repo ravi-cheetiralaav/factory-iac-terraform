@@ -1,6 +1,11 @@
 variable "configuration" {
-  description = "Artifactory groups, users, generic and Docker repositories, and repository permission targets"
+  description = "JFrog projects with robot users, Artifactory identities, repositories and permissions"
   type = object({
+    projects = optional(map(object({
+      key          = string
+      display_name = string
+      robot_email  = string
+    })), {})
     groups = optional(map(object({
       description = optional(string)
     })), {})

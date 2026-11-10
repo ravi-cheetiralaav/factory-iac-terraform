@@ -10,5 +10,9 @@ terraform {
       source  = "jfrog/artifactory"
       version = "12.11.14"
     }
+    project = {
+      source  = "jfrog/project"
+      version = "1.9.9"
+    }
   }
 }
