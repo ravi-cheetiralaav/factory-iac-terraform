@@ -190,7 +190,7 @@ Example excerpt to merge into the existing `artifactory.repositories.local` obje
 ```
 
 The Terraform backend repository is an application repository only. It does not
-replace this root's GDC S3 backend or configure Terraform clients to use it.
+replace this root's Azure Blob backend or configure Terraform clients to use it.
 Virtual formats remain limited to generic and Docker.
 
 ## Instance Settings and Maintenance

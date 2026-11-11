@@ -7,7 +7,7 @@ description: JSON-driven administration of self-hosted GitLab and Artifactory ac
 
 One Terraform root manages application configuration in existing GitLab and JFrog
 Artifactory installations. It does not install either service, provision GDC
-infrastructure, create the state bucket, or create CI pipelines.
+infrastructure, create the Azure state storage account/container, or create CI pipelines.
 
 * GitLab groups, one level of subgroups, local users, existing-user lookup,
   memberships, projects, labels, push rules, merge settings, protected branches,
@@ -30,7 +30,7 @@ Edit the two lab01 configuration files:
 * [environments/lab01/gitlab.json](environments/lab01/gitlab.json) for the GitLab URL, hierarchy, users, memberships, and policies
 * [environments/lab01/jfrog.json](environments/lab01/jfrog.json) for the Artifactory URL, robot defaults, access, repositories, and optional administration settings
 
-The `e01` and `w01` directories contain only backend placeholders for now.
+The `e01` and `w01` directories contain only backend configuration for now.
 Add both environment-specific JSON files before planning or applying either one;
 there is no fallback to lab01 configuration.
 Replace the example endpoints, names, email addresses, and repository keys before
@@ -173,7 +173,7 @@ Local formats are `alpine`, `ansible`, `debian`, `docker`, `generic`, `helm`,
 `helmoci`, `oci`, `maven`, `npm`, `nuget`, `pypi`, `rpm`, `terraform_module`,
 `terraform_provider`, and `terraformbackend`. Existing generic/Docker JSON paths
 and Terraform addresses are unchanged. Creating a Terraform backend repository
-does not change this root's GDC S3 state backend.
+does not change this root's Azure Blob state backend.
 
 All new administrative settings are opt-in and absent from lab01. Omitted/null
 singleton objects create no resources; a present object with `should_enable = false`
@@ -283,13 +283,14 @@ Configure masked, protected, environment-scoped variables in your existing CI:
 | `ARTIFACTORY_ACCESS_TOKEN` | JFrog access token with required administration permissions |
 | `PROJECT_ACCESS_TOKEN` | JFrog token authorized to administer Projects, roles, and membership |
 | `TF_VAR_artifactory_secrets` | Optional JSON object with SMTP password and OAuth client secrets; see module examples |
-| `AWS_ACCESS_KEY_ID` | GDC S3-compatible storage access key |
-| `AWS_SECRET_ACCESS_KEY` | GDC S3-compatible storage secret key |
-| `AWS_SESSION_TOKEN` | Only if the storage credential mechanism requires it |
+| `ARM_TENANT_ID` | Microsoft Entra tenant containing the backend identity |
+| `ARM_CLIENT_ID` | Application/client ID for the CI backend identity |
+| `ARM_USE_OIDC` | Set to `true` when using CI workload identity federation |
+| `ARM_OIDC_TOKEN` | Short-lived CI-issued OIDC token matching the federated credential |
 
 Local GitLab user creation requires administrator access. Prefer separate service
 identities and credentials for each environment. Trust your internal CA in the
-runner and provider processes; use `AWS_CA_BUNDLE` for the backend where needed.
+runner and provider processes, including any proxy used to reach Azure.
 Do not disable TLS verification or print credentials in CI logs.
 
 The Project provider also accepts `JFROG_ACCESS_TOKEN`, which takes precedence
@@ -308,7 +309,9 @@ saved plans. Restrict access to both.
 
 The following is a shell command sequence for your existing pipeline, not a new
 pipeline definition. Inject credentials beforehand. Use the same checkout,
-environment, provider versions, and backend settings for plan and apply.
+environment, provider versions, and backend settings for plan and apply. Complete
+any existing-state migration in the Azure Blob State section before using this
+sequence; `-reconfigure` does not copy state from the old backend.
 
 ```bash
 export TF_VAR_environment=lab01
@@ -332,37 +335,71 @@ file paired; Terraform does not verify that they describe the same environment.
 No Terraform workspaces are needed. Never migrate state between environments to
 switch targets; use a separate working data directory and reconfigure instead.
 
-## GDC Bucket State
+## Azure Blob State
 
-The backend assumes an S3-compatible GDC air-gapped storage endpoint, not public
-Google Cloud Storage. Confirm that this is the API exposed by your GDC deployment.
-Fill in the bucket, signing region, and endpoint in each environment's backend
-file, starting with [environments/lab01/backend.hcl](environments/lab01/backend.hcl).
-Each environment uses a distinct state key; separate buckets are preferable for
-credential isolation.
+[backend.tf](backend.tf) uses the `azurerm` backend with Microsoft Entra data-plane
+authentication (`use_azuread_auth = true`). No AzureRM resource provider is needed
+for the backend. The existing storage account and container are not managed by
+this root.
 
-The environment rename also changes the example state keys. If an old backend
-already contains state, do not apply against a new empty key. Arrange a reviewed
-state migration or retain the existing key for the same installation first.
+| Setting | Value |
+| --- | --- |
+| Subscription | `5dea8835-8c38-4f4d-8ac2-7accd278807d` |
+| Resource group | `terraform-state` |
+| Storage account | `tfravistatedev` |
+| Blob container | `tfstate` |
+| State key | `factory-day2/<environment>/terraform.tfstate` |
 
-Backend initialization happens before locals and providers are evaluated, so
-backend settings must remain in separate backend configuration files. They are
-not Terraform variable files. Credentials stay in environment variables.
+All three environment backend files use this account/container with distinct
+keys. Separate keys prevent state collisions but are not an access-control
+boundary; use separate containers or accounts if environment credential isolation
+is required. Backend files are partial backend configuration, not variable files.
 
-[backend.tf](backend.tf) enables path-style requests and native S3 lock files,
-and disables AWS-specific account/metadata checks. It does not disable TLS.
+For local use, sign in with Azure CLI to the account's tenant. The backend can use
+that CLI session. For CI, prefer workload identity federation with a federated
+credential matching the runner's issuer, subject, and audience, and inject the
+`ARM_*` variables above. Never commit storage keys, client secrets, or tokens.
+Grant the backend identity `Storage Blob Data Contributor` scoped to the
+container. Management-plane Contributor alone does not grant blob data access.
 
-> [!IMPORTANT]
-> Terraform's S3 backend support for non-AWS storage is best effort. GDC endpoint
-> compatibility and conditional lock-write semantics have not been tested here.
-> Verify locking with concurrent runs against a disposable state key before
-> production use. Do not remove locking to work around an incompatible endpoint.
+The runner needs HTTPS access to Azure Storage and the relevant authentication
+endpoints. A fully disconnected GDC runner cannot use this backend without an
+approved connectivity path. Azure Blob leases provide state locking; no S3
+`.tflock` object or `use_lockfile` setting is needed. Configure restricted network
+access, blob versioning, soft delete, and audit logging for recovery and security.
+Treat state and saved plans as sensitive artifacts.
 
-Grant the backend identity bucket listing as required, read/write access to its
-state object, and read/write/delete access to its `.tflock` object. Configure
-server-side encryption, restricted access, versioning or equivalent recovery, and
-audit logging using your storage platform's supported controls. State and saved
-plans must be treated as sensitive even when configuration contains no passwords.
+### New State or an Already Migrated Backend
+
+After confirming that no existing state needs copying, initialize with the
+environment-specific data directory and backend file shown in Existing CI
+Commands. Do not apply against an empty Azure key if the installation already has
+Terraform-managed resources in another backend.
+
+### Migrate Existing GDC State
+
+Pause writers and securely back up the source state before migration. For each
+environment, use its existing working directory and `TF_DATA_DIR` that retain the
+old initialized S3 backend metadata. Keep the original GDC connection settings and
+credentials available for reading the source. Do not run `-reconfigure` or delete
+the cached backend metadata first. With the new backend configuration checked out,
+run the following for lab01 (substitute the corresponding file for other environments):
+
+```bash
+terraform init -migrate-state -lockfile=readonly -backend-config="environments/lab01/backend.hcl"
+```
+
+Review Terraform's prompts before approving the copy. Do not combine
+`-migrate-state` with `-reconfigure`, and do not use unattended force-copy flags.
+If the original initialized metadata is unavailable, restore the old configuration
+and initialize its source backend in a controlled working directory first.
+After migration, verify the destination state's lineage, serial, and resource
+addresses against the backup and review a plan before resuming CI. Retain the
+source backup until verification is complete. Changing these files alone does
+not migrate existing state.
+
+See the [Terraform AzureRM backend documentation](https://developer.hashicorp.com/terraform/language/backend/azurerm)
+for authentication and backend configuration details.
 
 ## Air-Gapped Provider Installation
 
@@ -452,7 +489,7 @@ lab01 configuration, and the absence of
 configuration in the other two environments. Regression assertions verify every
 original hierarchy key and parent, plus normalized JFrog access and repositories. Tests make
 no live API calls. Live server compatibility, imports, robot tokens and publishing,
-password-reset behavior, SMTP/SSO login, archive/cleanup execution, GDC state access,
+password-reset behavior, SMTP/SSO login, archive/cleanup execution, Azure state access,
 and locking need environment validation. Provider support alone does not establish
 server-version or license support for these features.
 
