@@ -1,0 +1,42 @@
+{
+  "artifactory_url": "https://jfrog.lab01.example.internal/artifactory",
+  "artifactory": {
+    "defaults": {
+      "robot_email_domain": "example.internal"
+    },
+    "access": {
+      "groups": {
+        "platform-lab01-developers": { "description": "Lab01 artifact publishers" }
+      },
+      "users": {
+        "example.developer": { "email": "example.developer@example.internal", "groups": ["platform-lab01-developers"] }
+      },
+      "permission_targets": {
+        "platform-lab01-publish": {
+          "repositories": ["platform-lab01-generic-local", "platform-lab01-docker-local"],
+          "group_permissions": { "platform-lab01-developers": ["read", "write", "annotate"] }
+        }
+      }
+    },
+    "repositories": {
+      "local": {
+        "generic": { "platform-lab01-generic-local": {} },
+        "docker": { "platform-lab01-docker-local": {} }
+      },
+      "virtual": {
+        "generic": {
+          "platform-lab01-generic": {
+            "repositories": ["platform-lab01-generic-local"],
+            "default_deployment_repo": "platform-lab01-generic-local"
+          }
+        },
+        "docker": {
+          "platform-lab01-docker": {
+            "repositories": ["platform-lab01-docker-local"],
+            "default_deployment_repo": "platform-lab01-docker-local"
+          }
+        }
+      }
+    }
+  }
+}

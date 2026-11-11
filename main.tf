@@ -8,4 +8,5 @@ module "artifactory" {
   source = "./modules/artifactory"
 
   configuration = merge(local.artifactory, { projects = local.jfrog_projects })
+  secrets       = var.artifactory_secrets
 }

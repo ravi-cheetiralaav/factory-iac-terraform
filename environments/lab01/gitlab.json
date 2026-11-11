@@ -1,0 +1,133 @@
+{
+  "gitlab_base_url": "https://gitlab.lab01.example.internal/api/v4/",
+  "gitlab": {
+    "groups": {
+      "platform": {
+        "name": "Platform Group",
+        "path": "platform",
+        "subgroups": {
+          "platform-environment": {
+            "name": "Environment",
+            "path": "environment",
+            "projects": {
+              "platform-iac": { "name": "Platform Iac", "path": "platform-iac", "jfrog": { "key": "platform-iac" } },
+              "environment-config": { "name": "Environment-Config", "path": "environment-config" },
+              "ansible-playbooks": { "name": "Ansible Playbooks", "path": "ansible-playbooks" }
+            }
+          },
+          "platform-devsecops": {
+            "name": "DevSecOps",
+            "path": "devsecops",
+            "projects": {
+              "devops-iac": { "name": "DevOps-Iac", "path": "devops-iac" },
+              "bootstrap-scripts": { "name": "Bootstrap Scripts", "path": "bootstrap-scripts" }
+            }
+          },
+          "platform-cicd": {
+            "name": "CICD-Templates",
+            "path": "cicd-templates",
+            "projects": {
+              "gitlab-cicd-templates": { "name": "gitlab-cicd-templates", "path": "gitlab-cicd-templates" }
+            }
+          },
+          "platform-security": {
+            "name": "Security Engineering",
+            "path": "security-engineering",
+            "projects": {
+              "policy-as-code": { "name": "Policy-as-code", "path": "policy-as-code" },
+              "compliance-controls": { "name": "Compliance-Controls", "path": "compliance-controls" }
+            }
+          }
+        }
+      },
+      "capability-1": {
+        "name": "Capability-1",
+        "path": "capability-1",
+        "subgroups": {
+          "cap1-non-ec": {
+            "name": "Non-EC-apps",
+            "path": "non-ec-apps",
+            "projects": {
+              "cap1-non-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap1-non-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          },
+          "cap1-ec": {
+            "name": "EC-apps",
+            "path": "ec-apps",
+            "projects": {
+              "cap1-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap1-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          }
+        }
+      },
+      "capability-2": {
+        "name": "Capability-2",
+        "path": "capability-2",
+        "subgroups": {
+          "cap2-non-ec": {
+            "name": "Non-EC-apps",
+            "path": "non-ec-apps",
+            "projects": {
+              "cap2-non-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap2-non-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          },
+          "cap2-ec": {
+            "name": "EC-apps",
+            "path": "ec-apps",
+            "projects": {
+              "cap2-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap2-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          }
+        }
+      },
+      "capability-3": {
+        "name": "Capability-3",
+        "path": "capability-3",
+        "subgroups": {
+          "cap3-non-ec": {
+            "name": "Non-EC-apps",
+            "path": "non-ec-apps",
+            "projects": {
+              "cap3-non-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap3-non-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          },
+          "cap3-ec": {
+            "name": "EC-apps",
+            "path": "ec-apps",
+            "projects": {
+              "cap3-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap3-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          }
+        }
+      },
+      "capability-4": {
+        "name": "Capability-4",
+        "path": "capability-4",
+        "subgroups": {
+          "cap4-non-ec": {
+            "name": "Non-EC-apps",
+            "path": "non-ec-apps",
+            "projects": {
+              "cap4-non-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap4-non-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          },
+          "cap4-ec": {
+            "name": "EC-apps",
+            "path": "ec-apps",
+            "projects": {
+              "cap4-ec-app1": { "name": "App-1", "path": "app-1" },
+              "cap4-ec-app2": { "name": "App-2", "path": "app-2" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

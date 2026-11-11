@@ -53,6 +53,9 @@ run "gitlab_onboarding_and_protection" {
           path           = "application"
           group_key      = "platform"
           default_branch = "trunk"
+          labels = {
+            bug = { color = "#FF0000" }
+          }
           branch_protections = {
             "release/*" = {}
           }
@@ -93,6 +96,157 @@ run "gitlab_onboarding_and_protection" {
   }
 }
 
+run "gitlab_project_policies" {
+  command   = apply
+  state_key = "gitlab-project-policies"
+
+  module {
+    source = "./modules/gitlab"
+  }
+
+  override_resource {
+    target = gitlab_project.projects["custom"]
+    values = { id = "302" }
+  }
+
+  variables {
+    configuration = {
+      is_enterprise = true
+      groups = {
+        team = { name = "Team", path = "team" }
+      }
+      projects = {
+        defaults = {
+          name         = "Defaults", path = "defaults", group_key = "team"
+          mr_approvals = {}
+          labels       = { bug = { color = "#FF0000" } }
+        }
+        custom = {
+          name = "Custom", path = "custom", group_key = "team"
+          push_rules = {
+            author_email_regex             = "@example[.]internal$"
+            branch_name_regex              = "^(main|feature/.+)$"
+            commit_message_regex           = "^(feat|fix):"
+            commit_message_negative_regex  = "WIP"
+            file_name_regex                = "[.]pem$"
+            max_file_size                  = 10
+            should_check_committer_email   = true
+            should_check_committer_name    = true
+            should_deny_tag_deletion       = true
+            should_check_member            = true
+            should_prevent_secrets         = true
+            should_reject_non_dco_commits  = true
+            should_reject_unsigned_commits = false
+          }
+          mr_approvals = {
+            should_allow_author_approval               = true
+            should_allow_committer_approval            = true
+            should_allow_approver_overrides            = true
+            should_reset_approvals_on_push             = false
+            should_remove_changed_code_owner_approvals = true
+            should_require_reauthentication_to_approve = true
+          }
+          labels = {
+            bug            = { color = "#CC0000", description = "Defect", priority = 0 }
+            "needs review" = { color = "blue", priority = 2 }
+          }
+        }
+        omitted = { name = "Omitted", path = "omitted", group_key = "team" }
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      length(gitlab_project_push_rules.projects) == 1 &&
+      length(gitlab_project_level_mr_approvals.projects) == 2 &&
+      length(gitlab_project_label.labels) == 3 &&
+      gitlab_project_push_rules.projects["custom"].project == "302" &&
+      gitlab_project_level_mr_approvals.projects["custom"].project == "302" &&
+      gitlab_project_level_mr_approvals.projects["defaults"].project == "301"
+    )
+    error_message = "Optional project policies must target their own project and remain absent when omitted."
+  }
+
+  assert {
+    condition = (
+      !gitlab_project_level_mr_approvals.projects["defaults"].merge_requests_author_approval &&
+      gitlab_project_level_mr_approvals.projects["defaults"].merge_requests_disable_committers_approval &&
+      gitlab_project_level_mr_approvals.projects["defaults"].disable_overriding_approvers_per_merge_request &&
+      gitlab_project_level_mr_approvals.projects["defaults"].reset_approvals_on_push &&
+      !gitlab_project_level_mr_approvals.projects["defaults"].selective_code_owner_removals &&
+      gitlab_project_level_mr_approvals.projects["custom"].merge_requests_author_approval &&
+      !gitlab_project_level_mr_approvals.projects["custom"].merge_requests_disable_committers_approval &&
+      !gitlab_project_level_mr_approvals.projects["custom"].disable_overriding_approvers_per_merge_request &&
+      !gitlab_project_level_mr_approvals.projects["custom"].reset_approvals_on_push &&
+      gitlab_project_level_mr_approvals.projects["custom"].selective_code_owner_removals &&
+      gitlab_project_level_mr_approvals.projects["custom"].require_reauthentication_to_approve
+    )
+    error_message = "Project MR settings must preserve restrictive defaults and correctly invert the allow flags."
+  }
+
+  assert {
+    condition = (
+      gitlab_project_push_rules.projects["custom"].author_email_regex == "@example[.]internal$" &&
+      gitlab_project_push_rules.projects["custom"].branch_name_regex == "^(main|feature/.+)$" &&
+      gitlab_project_push_rules.projects["custom"].commit_message_regex == "^(feat|fix):" &&
+      gitlab_project_push_rules.projects["custom"].commit_message_negative_regex == "WIP" &&
+      gitlab_project_push_rules.projects["custom"].file_name_regex == "[.]pem$" &&
+      gitlab_project_push_rules.projects["custom"].max_file_size == 10 &&
+      gitlab_project_push_rules.projects["custom"].commit_committer_check &&
+      gitlab_project_push_rules.projects["custom"].commit_committer_name_check &&
+      gitlab_project_push_rules.projects["custom"].deny_delete_tag &&
+      gitlab_project_push_rules.projects["custom"].member_check &&
+      gitlab_project_push_rules.projects["custom"].prevent_secrets &&
+      gitlab_project_push_rules.projects["custom"].reject_non_dco_commits &&
+      !gitlab_project_push_rules.projects["custom"].reject_unsigned_commits
+    )
+    error_message = "Every configured push-rule field must reach the provider without changing its value."
+  }
+
+  assert {
+    condition = (
+      gitlab_project_label.labels[jsonencode(["defaults", "bug"])].project == "301" &&
+      gitlab_project_label.labels[jsonencode(["custom", "bug"])].project == "302" &&
+      gitlab_project_label.labels[jsonencode(["custom", "bug"])].name == "bug" &&
+      gitlab_project_label.labels[jsonencode(["custom", "bug"])].color == "#CC0000" &&
+      gitlab_project_label.labels[jsonencode(["custom", "bug"])].description == "Defect" &&
+      gitlab_project_label.labels[jsonencode(["custom", "bug"])].priority == 0 &&
+      gitlab_project_label.labels[jsonencode(["custom", "needs review"])].name == "needs review" &&
+      gitlab_project_label.labels[jsonencode(["custom", "needs review"])].color == "blue" &&
+      gitlab_project_label.labels[jsonencode(["custom", "needs review"])].priority == 2 &&
+      var.configuration.projects["defaults"].labels["bug"].priority == null
+    )
+    error_message = "Labels must retain names, colors, descriptions and priorities without colliding across projects."
+  }
+}
+
+run "gitlab_project_policies_require_enterprise" {
+  command = plan
+
+  module {
+    source = "./modules/gitlab"
+  }
+
+  variables {
+    configuration = {
+      groups = { team = { name = "Team", path = "team" } }
+      projects = {
+        application = {
+          name         = "Application", path = "application", group_key = "team"
+          push_rules   = {}
+          mr_approvals = {}
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    gitlab_project_push_rules.projects["application"],
+    gitlab_project_level_mr_approvals.projects["application"]
+  ]
+}
+
 run "gitlab_enterprise_protection" {
   command = plan
 
@@ -130,6 +284,127 @@ run "gitlab_enterprise_protection" {
   }
 }
 
+run "gitlab_group_policies" {
+  command   = apply
+  state_key = "gitlab-group-policies"
+
+  module {
+    source = "./modules/gitlab"
+  }
+
+  variables {
+    configuration = {
+      is_enterprise = true
+      groups = {
+        engineering = {
+          name         = "Engineering"
+          path         = "engineering"
+          mr_approvals = {}
+          protected_environments = {
+            production = {
+              deploy_access_levels = [{ access_level = "maintainer" }]
+              approval_rules       = [{ access_level = "maintainer", required_approvals = 2 }]
+            }
+          }
+        }
+        unmanaged = { name = "Unmanaged policies", path = "unmanaged" }
+      }
+      subgroups = {
+        platform = {
+          name             = "Platform"
+          path             = "platform"
+          parent_group_key = "engineering"
+          mr_approvals = {
+            should_allow_author_approval                              = true
+            should_allow_committer_approval                           = true
+            should_allow_overrides_to_approver_list_per_merge_request = true
+            should_retain_approvals_on_push                           = true
+            should_require_reauthentication_to_approve                = true
+            should_keep_settings_on_destroy                           = false
+          }
+          protected_environments = {
+            production = {
+              deploy_access_levels = [{ user_id = 201 }, { group_id = 501, group_inheritance_type = 1 }]
+              approval_rules       = [{ user_id = 201 }, { group_id = 501, group_inheritance_type = 1, required_approvals = 1 }]
+            }
+            staging = {
+              deploy_access_levels = [{ access_level = "developer" }]
+            }
+          }
+        }
+      }
+    }
+  }
+
+  override_resource {
+    target = gitlab_group.subgroups["platform"]
+    values = { id = "102" }
+  }
+
+  assert {
+    condition = (
+      length(gitlab_group_level_mr_approvals.groups) == 2 &&
+      gitlab_group_level_mr_approvals.groups["engineering"].group == "101" &&
+      !gitlab_group_level_mr_approvals.groups["engineering"].allow_author_approval &&
+      !gitlab_group_level_mr_approvals.groups["engineering"].allow_committer_approval &&
+      !gitlab_group_level_mr_approvals.groups["engineering"].allow_overrides_to_approver_list_per_merge_request &&
+      !gitlab_group_level_mr_approvals.groups["engineering"].retain_approvals_on_push &&
+      gitlab_group_level_mr_approvals.groups["engineering"].keep_settings_on_destroy &&
+      gitlab_group_level_mr_approvals.groups["platform"].group == "102" &&
+      gitlab_group_level_mr_approvals.groups["platform"].allow_author_approval &&
+      gitlab_group_level_mr_approvals.groups["platform"].allow_committer_approval &&
+      gitlab_group_level_mr_approvals.groups["platform"].allow_overrides_to_approver_list_per_merge_request &&
+      gitlab_group_level_mr_approvals.groups["platform"].retain_approvals_on_push &&
+      gitlab_group_level_mr_approvals.groups["platform"].require_reauthentication_to_approve &&
+      !gitlab_group_level_mr_approvals.groups["platform"].keep_settings_on_destroy
+    )
+    error_message = "MR approval policies must be opt-in, resolve root and subgroup IDs and preserve defaults and overrides."
+  }
+
+  assert {
+    condition = (
+      length(gitlab_group_protected_environment.environments) == 3 &&
+      gitlab_group_protected_environment.environments[jsonencode(["engineering", "production"])].group == "101" &&
+      gitlab_group_protected_environment.environments[jsonencode(["platform", "production"])].group == "102" &&
+      gitlab_group_protected_environment.environments[jsonencode(["platform", "staging"])].environment == "staging" &&
+      one(gitlab_group_protected_environment.environments[jsonencode(["engineering", "production"])].deploy_access_levels).access_level == "maintainer" &&
+      one(gitlab_group_protected_environment.environments[jsonencode(["engineering", "production"])].approval_rules).required_approvals == 2 &&
+      length(gitlab_group_protected_environment.environments[jsonencode(["platform", "staging"])].approval_rules) == 0 &&
+      anytrue([for rule in gitlab_group_protected_environment.environments[jsonencode(["platform", "production"])].deploy_access_levels : rule.user_id == 201]) &&
+      anytrue([for rule in gitlab_group_protected_environment.environments[jsonencode(["platform", "production"])].approval_rules : rule.group_id == 501 && rule.group_inheritance_type == 1 && rule.required_approvals == 1])
+    )
+    error_message = "Protected deployment tiers must retain distinct group addresses and role, user and group rules."
+  }
+}
+
+run "gitlab_group_policies_require_enterprise" {
+  command = plan
+
+  module {
+    source = "./modules/gitlab"
+  }
+
+  variables {
+    configuration = {
+      groups = {
+        team = {
+          name         = "Team"
+          path         = "team"
+          mr_approvals = {}
+          protected_environments = {
+            production = { deploy_access_levels = [{ access_level = "maintainer" }] }
+          }
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    gitlab_group_level_mr_approvals.groups["team"],
+    gitlab_group_protected_environment.environments["[\"team\",\"production\"]"]
+  ]
+}
+
 run "gitlab_reject_duplicate_group_keys" {
   command = plan
 
@@ -160,7 +435,44 @@ run "artifactory_onboarding_and_permissions" {
   }
 
   variables {
+    secrets = {
+      mail_password        = "mock-smtp-password"
+      oauth_client_secrets = { internal = "mock-client-secret" }
+    }
     configuration = {
+      mail_server = { host = "smtp.example.invalid", port = 587, username = "artifactory" }
+      oauth_settings = {
+        should_enable = true
+        providers = {
+          internal = {
+            type    = "openId", client_id = "artifactory"
+            api_url = "https://idp.example.invalid/userinfo", auth_url = "https://idp.example.invalid/authorize", token_url = "https://idp.example.invalid/token"
+          }
+        }
+      }
+      password_expiration_policy = {
+        name = "internal-passwords", should_enable = true, password_max_age = 120, should_notify_by_email = true
+      }
+      general_security = { encryption_policy = "REQUIRED" }
+      backups = {
+        nightly = { cron_exp = "0 0 2 * * ? *", excluded_repositories = ["docker-local"] }
+      }
+      archive_policies = {
+        archive-old = {
+          search_criteria = {
+            package_types          = ["docker"], repos = ["docker-local"], included_packages = ["**"], included_projects = ["default"]
+            created_before_in_days = 180, last_downloaded_before_in_days = 90
+          }
+        }
+      }
+      package_cleanup_policies = {
+        cleanup-old = {
+          search_criteria = {
+            package_types          = ["generic"], repos = ["generic-local"], included_packages = ["**"], included_projects = ["default"]
+            created_before_in_days = 90, last_downloaded_before_in_days = 30
+          }
+        }
+      }
       groups = { developers = {} }
       projects = {
         application = { key = "test-app", display_name = "Application", robot_email = "robot-test-app@example.invalid" }
@@ -170,6 +482,22 @@ run "artifactory_onboarding_and_permissions" {
       }
       local_generic_repositories = { "generic-local" = {} }
       local_docker_repositories  = { "docker-local" = {} }
+      local_alpine_repositories  = { "alpine-local" = { primary_keypair_ref = "rsa-signing" } }
+      local_ansible_repositories = { "ansible-local" = { primary_keypair_ref = "rsa-signing" } }
+      local_debian_repositories = {
+        "debian-local" = { primary_keypair_ref = "gpg-primary", secondary_keypair_ref = "gpg-secondary", index_compression_formats = ["xz"] }
+      }
+      local_helm_repositories               = { "helm-local" = { should_force_non_duplicate_chart = true, should_force_metadata_name_version = true } }
+      local_helmoci_repositories            = { "helmoci-local" = { tag_retention = 3 } }
+      local_oci_repositories                = { "oci-local" = { tag_retention = 2 } }
+      local_maven_repositories              = { "maven-local" = { should_handle_snapshots = false } }
+      local_npm_repositories                = { "npm-local" = {} }
+      local_nuget_repositories              = { "nuget-local" = { should_force_nuget_authentication = true } }
+      local_pypi_repositories               = { "pypi-local" = {} }
+      local_rpm_repositories                = { "rpm-local" = { yum_root_depth = 2, should_calculate_yum_metadata = true, primary_keypair_ref = "gpg-primary" } }
+      local_terraform_module_repositories   = { "terraform-module-local" = {} }
+      local_terraform_provider_repositories = { "terraform-provider-local" = {} }
+      local_terraformbackend_repositories   = { "terraformbackend-local" = {} }
       virtual_generic_repositories = {
         generic = { repositories = ["generic-local"], default_deployment_repo = "generic-local" }
       }
@@ -184,6 +512,78 @@ run "artifactory_onboarding_and_permissions" {
         }
       }
     }
+  }
+
+  assert {
+    condition = (
+      length(output.repository_keys) == 18 &&
+      alltrue([for repositories in values(output.repository_keys) : length(repositories) == 1]) &&
+      artifactory_local_alpine_repository.repositories["alpine-local"].primary_keypair_ref == "rsa-signing" &&
+      artifactory_local_ansible_repository.repositories["ansible-local"].primary_keypair_ref == "rsa-signing" &&
+      artifactory_local_debian_repository.repositories["debian-local"].index_compression_formats == toset(["xz"]) &&
+      artifactory_local_debian_repository.repositories["debian-local"].secondary_keypair_ref == "gpg-secondary" &&
+      !artifactory_local_debian_repository.repositories["debian-local"].trivial_layout &&
+      artifactory_local_helm_repository.repositories["helm-local"].force_non_duplicate_chart &&
+      artifactory_local_helm_repository.repositories["helm-local"].force_metadata_name_version &&
+      artifactory_local_helmoci_repository.repositories["helmoci-local"].tag_retention == 3 &&
+      artifactory_local_helmoci_repository.repositories["helmoci-local"].max_unique_tags == 0 &&
+      artifactory_local_oci_repository.repositories["oci-local"].tag_retention == 2 &&
+      artifactory_local_oci_repository.repositories["oci-local"].max_unique_tags == 0 &&
+      !artifactory_local_maven_repository.repositories["maven-local"].handle_snapshots &&
+      artifactory_local_maven_repository.repositories["maven-local"].handle_releases &&
+      artifactory_local_maven_repository.repositories["maven-local"].max_unique_snapshots == 0 &&
+      artifactory_local_nuget_repository.repositories["nuget-local"].force_nuget_authentication &&
+      artifactory_local_nuget_repository.repositories["nuget-local"].max_unique_snapshots == 0 &&
+      artifactory_local_rpm_repository.repositories["rpm-local"].calculate_yum_metadata &&
+      artifactory_local_rpm_repository.repositories["rpm-local"].yum_root_depth == 2 &&
+      artifactory_local_rpm_repository.repositories["rpm-local"].primary_keypair_ref == "gpg-primary"
+    )
+    error_message = "All sixteen local formats and both virtual formats must preserve their package settings."
+  }
+
+  assert {
+    condition = (
+      !artifactory_mail_server.main["main"].enabled &&
+      artifactory_mail_server.main["main"].use_tls &&
+      !artifactory_mail_server.main["main"].use_ssl &&
+      artifactory_mail_server.main["main"].host == "smtp.example.invalid" &&
+      artifactory_mail_server.main["main"].password == var.secrets.mail_password &&
+      artifactory_oauth_settings.main["main"].enable &&
+      !artifactory_oauth_settings.main["main"].persist_users &&
+      !artifactory_oauth_settings.main["main"].allow_user_to_access_profile &&
+      one(artifactory_oauth_settings.main["main"].oauth_provider).client_secret == var.secrets.oauth_client_secrets["internal"] &&
+      one(artifactory_oauth_settings.main["main"].oauth_provider).name == "internal"
+    )
+    error_message = "SMTP and OAuth must use external secrets and preserve the configured settings."
+  }
+
+  assert {
+    condition = (
+      artifactory_password_expiration_policy.main["main"].name == "internal-passwords" &&
+      artifactory_password_expiration_policy.main["main"].enabled &&
+      artifactory_password_expiration_policy.main["main"].password_max_age == 120 &&
+      artifactory_password_expiration_policy.main["main"].notify_by_email &&
+      !artifactory_general_security.main["main"].enable_anonymous_access &&
+      artifactory_general_security.main["main"].encryption_policy == "REQUIRED"
+    )
+    error_message = "Opt-in password and general security settings must map to the provider fields."
+  }
+
+  assert {
+    condition = (
+      !artifactory_backup.backups["nightly"].enabled &&
+      artifactory_backup.backups["nightly"].verify_disk_space &&
+      artifactory_backup.backups["nightly"].retention_period_hours == 168 &&
+      artifactory_backup.backups["nightly"].excluded_repositories == tolist(["docker-local"]) &&
+      !artifactory_archive_policy.policies["archive-old"].enabled &&
+      !artifactory_archive_policy.policies["archive-old"].skip_trashcan &&
+      artifactory_archive_policy.policies["archive-old"].search_criteria.created_before_in_days == 180 &&
+      !artifactory_package_cleanup_policy.policies["cleanup-old"].enabled &&
+      !artifactory_package_cleanup_policy.policies["cleanup-old"].skip_trashcan &&
+      artifactory_package_cleanup_policy.policies["cleanup-old"].search_criteria.repos == toset(["generic-local"]) &&
+      artifactory_package_cleanup_policy.policies["cleanup-old"].search_criteria.last_downloaded_before_in_days == 30
+    )
+    error_message = "Maintenance must preserve explicit scopes and default to disabled with trashcan protection."
   }
 
   assert {
@@ -241,7 +641,12 @@ run "empty_gitlab" {
     source = "./modules/gitlab"
   }
   assert {
-    condition     = length(output.group_ids) == 0 && length(output.project_ids) == 0 && length(output.user_ids) == 0
+    condition = (
+      length(output.group_ids) == 0 && length(output.project_ids) == 0 && length(output.user_ids) == 0 &&
+      length(gitlab_project_push_rules.projects) == 0 && length(gitlab_project_label.labels) == 0 &&
+      length(gitlab_project_level_mr_approvals.projects) == 0 &&
+      length(gitlab_group_level_mr_approvals.groups) == 0 && length(gitlab_group_protected_environment.environments) == 0
+    )
     error_message = "Empty GitLab input must create no resources."
   }
 }
@@ -255,6 +660,18 @@ run "empty_artifactory" {
     condition     = length(output.project_keys) == 0 && length(output.robot_usernames) == 0 && alltrue([for repositories in values(output.repository_keys) : length(repositories) == 0])
     error_message = "Empty Artifactory input must create no projects, robots or repositories."
   }
+  assert {
+    condition = (
+      length(artifactory_password_expiration_policy.main) == 0 &&
+      length(artifactory_mail_server.main) == 0 &&
+      length(artifactory_oauth_settings.main) == 0 &&
+      length(artifactory_general_security.main) == 0 &&
+      length(artifactory_backup.backups) == 0 &&
+      length(artifactory_archive_policy.policies) == 0 &&
+      length(artifactory_package_cleanup_policy.policies) == 0
+    )
+    error_message = "Omitted security and maintenance configuration must create no resources."
+  }
 }
 
 run "diagram_branch_protection" {
@@ -265,7 +682,27 @@ run "diagram_branch_protection" {
   }
 
   variables {
-    configuration = jsondecode(file("environments/lab01/config.json")).gitlab
+    configuration = {
+      groups = jsondecode(file("environments/lab01/gitlab.json")).gitlab.groups
+      subgroups = { for subgroup in flatten([
+        for group_key, group in jsondecode(file("environments/lab01/gitlab.json")).gitlab.groups : [
+          for subgroup_key, subgroup in group.subgroups : {
+            key   = subgroup_key
+            value = merge(subgroup, { parent_group_key = group_key })
+          }
+        ]
+      ]) : subgroup.key => subgroup.value }
+      projects = { for project in flatten([
+        for group in jsondecode(file("environments/lab01/gitlab.json")).gitlab.groups : [
+          for subgroup_key, subgroup in group.subgroups : [
+            for project_key, project in subgroup.projects : {
+              key   = project_key
+              value = merge(project, { group_key = subgroup_key })
+            }
+          ]
+        ]
+      ]) : project.key => project.value }
+    }
   }
 
   assert {
@@ -343,12 +780,14 @@ run "lab01_environment_configuration" {
 
   assert {
     condition = (
-      fileset(path.root, "environments/*/config.json") == toset(["environments/lab01/config.json"]) &&
+      length(fileset(path.root, "environments/*/config.json")) == 0 &&
+      fileset(path.root, "environments/*/gitlab.json") == toset(["environments/lab01/gitlab.json"]) &&
+      fileset(path.root, "environments/*/jfrog.json") == toset(["environments/lab01/jfrog.json"]) &&
       fileset(path.root, "environments/*/backend.hcl") == toset([
         "environments/lab01/backend.hcl", "environments/e01/backend.hcl", "environments/w01/backend.hcl"
       ])
     )
-    error_message = "Only lab01 must have configuration; lab01, e01 and w01 must each have a backend file."
+    error_message = "Only lab01 must have split GitLab and JFrog configuration with no combined config.json; lab01, e01 and w01 must each have a backend file."
   }
 
   assert {
@@ -361,6 +800,67 @@ run "lab01_environment_configuration" {
       alltrue([for key, project in local.jfrog_projects : project.key == key && project.robot_email == "robot-${key}@example.internal"])
     )
     error_message = "The diagram must yield 5 groups, 12 subgroups and 24 uniquely paired projects and robots."
+  }
+
+  assert {
+    condition = (
+      toset(keys(local.gitlab.groups)) == toset(["platform", "capability-1", "capability-2", "capability-3", "capability-4"]) &&
+      tomap({ for key, subgroup in local.gitlab.subgroups : key => subgroup.parent_group_key }) == tomap({
+        platform-environment = "platform"
+        platform-devsecops   = "platform"
+        platform-cicd        = "platform"
+        platform-security    = "platform"
+        cap1-non-ec          = "capability-1"
+        cap1-ec              = "capability-1"
+        cap2-non-ec          = "capability-2"
+        cap2-ec              = "capability-2"
+        cap3-non-ec          = "capability-3"
+        cap3-ec              = "capability-3"
+        cap4-non-ec          = "capability-4"
+        cap4-ec              = "capability-4"
+      }) &&
+      tomap({ for key, project in local.gitlab.projects : key => project.group_key }) == tomap({
+        platform-iac          = "platform-environment"
+        environment-config    = "platform-environment"
+        ansible-playbooks     = "platform-environment"
+        devops-iac            = "platform-devsecops"
+        bootstrap-scripts     = "platform-devsecops"
+        gitlab-cicd-templates = "platform-cicd"
+        policy-as-code        = "platform-security"
+        compliance-controls   = "platform-security"
+        cap1-non-ec-app1      = "cap1-non-ec"
+        cap1-non-ec-app2      = "cap1-non-ec"
+        cap1-ec-app1          = "cap1-ec"
+        cap1-ec-app2          = "cap1-ec"
+        cap2-non-ec-app1      = "cap2-non-ec"
+        cap2-non-ec-app2      = "cap2-non-ec"
+        cap2-ec-app1          = "cap2-ec"
+        cap2-ec-app2          = "cap2-ec"
+        cap3-non-ec-app1      = "cap3-non-ec"
+        cap3-non-ec-app2      = "cap3-non-ec"
+        cap3-ec-app1          = "cap3-ec"
+        cap3-ec-app2          = "cap3-ec"
+        cap4-non-ec-app1      = "cap4-non-ec"
+        cap4-non-ec-app2      = "cap4-non-ec"
+        cap4-ec-app1          = "cap4-ec"
+        cap4-ec-app2          = "cap4-ec"
+      })
+    )
+    error_message = "Hierarchical JSON must preserve every original group, subgroup and project key and derive the same parent relationships."
+  }
+
+  assert {
+    condition = (
+      local.artifactory.groups == local.configuration.artifactory.access.groups &&
+      local.artifactory.users == local.configuration.artifactory.access.users &&
+      local.artifactory.permission_targets == local.configuration.artifactory.access.permission_targets &&
+      toset(output.artifactory_repository_keys.local_docker) == toset(["platform-lab01-docker-local"]) &&
+      toset(output.artifactory_repository_keys.virtual_generic) == toset(["platform-lab01-generic"]) &&
+      toset(output.artifactory_repository_keys.virtual_docker) == toset(["platform-lab01-docker"]) &&
+      local.artifactory.virtual_generic_repositories["platform-lab01-generic"].default_deployment_repo == "platform-lab01-generic-local" &&
+      local.artifactory.virtual_docker_repositories["platform-lab01-docker"].repositories == ["platform-lab01-docker-local"]
+    )
+    error_message = "Nested JFrog access and repository configuration must retain the existing identities, grants and repository relationships."
   }
 
   assert {
