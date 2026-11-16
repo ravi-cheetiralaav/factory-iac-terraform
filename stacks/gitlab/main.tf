@@ -51,27 +51,3 @@ output "runner_tokens" {
   sensitive = true
 }
 
-moved {
-  from = gitlab_group.this["platform"]
-  to   = module.group.gitlab_group.this["platform"]
-}
-
-moved {
-  from = gitlab_group.this["environment-sub-group"]
-  to   = module.group.gitlab_group.this["environment-sub-group"]
-}
-
-moved {
-  from = gitlab_group.this["devsecops-sub-group"]
-  to   = module.group.gitlab_group.this["devsecops-sub-group"]
-}
-
-moved {
-  from = gitlab_group.this["cicd-templates-sub-group"]
-  to   = module.group.gitlab_group.this["cicd-templates-sub-group"]
-}
-
-moved {
-  from = gitlab_group.this["security-engineering-sub-group"]
-  to   = module.group.gitlab_group.this["security-engineering-sub-group"]
-}
