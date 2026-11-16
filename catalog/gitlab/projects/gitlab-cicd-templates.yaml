@@ -1,0 +1,5 @@
+name: gitlab-cicd-templates
+path: gitlab-cicd-templates
+group: cicd-templates-sub-group
+description: Shared GitLab CI/CD templates
+visibility_level: private

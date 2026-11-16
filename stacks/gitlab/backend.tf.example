@@ -1,0 +1,8 @@
+# Use a state separate from stacks/jfrog.
+#
+# terraform {
+#   backend "gcs" {
+#     bucket = "REPLACE_ME"
+#     prefix = "gitlab/platform"
+#   }
+# }

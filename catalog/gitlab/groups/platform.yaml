@@ -1,0 +1,5 @@
+name: Platform Group
+path: platform
+description: Platform engineering group
+parent_group: null
+archive_on_destroy: true

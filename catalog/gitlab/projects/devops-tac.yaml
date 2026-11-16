@@ -1,0 +1,5 @@
+name: DevOps-Tac
+path: devops-tac
+group: devsecops-sub-group
+description: DevOps TAC project
+visibility_level: private

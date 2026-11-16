@@ -1,21 +1,21 @@
 locals {
-  project_files = fileset("${path.module}/../../catalog/projects", "*.yaml")
+  project_files = fileset("${path.module}/../../catalog/jfrog/projects", "*.yaml")
 }
 
 module "global" {
-  source = "../../modules/global"
+  source = "../../modules/artifactory-global"
 
-  spec                    = yamldecode(file("${path.module}/../../catalog/global.yaml"))
+  spec                    = yamldecode(file("${path.module}/../../catalog/jfrog/global.yaml"))
   manage_general_security = var.manage_general_security
   enable_anonymous_access = var.enable_anonymous_access
   encryption_policy       = var.encryption_policy
 }
 
 module "project" {
-  source   = "../../modules/project"
+  source   = "../../modules/artifactory-project"
   for_each = local.project_files
 
-  spec                              = yamldecode(file("${path.module}/../../catalog/projects/${each.value}"))
+  spec                              = yamldecode(file("${path.module}/../../catalog/jfrog/projects/${each.value}"))
   manage_project_permission_targets = var.manage_project_permission_targets
 
   depends_on = [module.global]

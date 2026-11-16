@@ -1,0 +1,5 @@
+name: Security Engineering Sub Group
+path: security-engineering
+description: Security engineering projects
+parent_group: platform
+archive_on_destroy: true

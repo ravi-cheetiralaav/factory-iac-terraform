@@ -1,5 +1,5 @@
 variable "spec" {
-  description = "Decoded catalog/global.yaml."
+  description = "Decoded catalog/jfrog/global.yaml."
   type        = any
 }
 

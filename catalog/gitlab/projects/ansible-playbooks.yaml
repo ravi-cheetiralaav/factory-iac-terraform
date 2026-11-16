@@ -1,0 +1,5 @@
+name: Ansible Playbooks
+path: ansible-playbooks
+group: environment-sub-group
+description: Ansible playbooks
+visibility_level: private
