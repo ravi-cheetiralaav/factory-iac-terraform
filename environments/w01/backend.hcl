@@ -1,5 +1,0 @@
-resource_group_name  = "terraform-state"
-storage_account_name = "tfravistatedev"
-container_name       = "tfstate"
-key                  = "factory-day2/w01/terraform.tfstate"
-subscription_id      = "5dea8835-8c38-4f4d-8ac2-7accd278807d"

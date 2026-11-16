@@ -1,0 +1,8 @@
+# One state for global repositories, Xray, and every project file.
+#
+# terraform {
+#   backend "gcs" {
+#     bucket = "REPLACE_ME"
+#     prefix = "artifactory/platform"
+#   }
+# }

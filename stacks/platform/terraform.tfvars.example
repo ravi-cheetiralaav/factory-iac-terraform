@@ -1,0 +1,5 @@
+jfrog_url                         = "https://artifactory.local"
+manage_general_security           = true
+enable_anonymous_access           = true
+encryption_policy                 = "SUPPORTED"
+manage_project_permission_targets = true
