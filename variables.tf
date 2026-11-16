@@ -1,6 +1,13 @@
 variable "environment" {
-  description = "Environment directory containing gitlab.json and jfrog.json, selected through TF_VAR_environment or -var"
+  description = "Environment directory containing gitlab.json and, when enabled, jfrog.json, selected through TF_VAR_environment or -var"
   type        = string
+  nullable    = false
+}
+
+variable "should_manage_artifactory" {
+  description = "Enable Artifactory and paired JFrog Projects; disable only when state contains no Artifactory resources"
+  type        = bool
+  default     = false
   nullable    = false
 }
 

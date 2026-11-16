@@ -17,7 +17,8 @@ mock_provider "artifactory" {}
 mock_provider "project" {}
 
 variables {
-  environment = "lab01"
+  environment               = "lab01"
+  should_manage_artifactory = true
 }
 
 run "gitlab_onboarding_and_protection" {
@@ -766,12 +767,35 @@ run "jfrog_reject_duplicate_robot_ownership" {
   expect_failures = [artifactory_user.robots]
 }
 
+run "gitlab_only_environment_configuration" {
+  command = plan
+
+  variables {
+    should_manage_artifactory = false
+  }
+
+  assert {
+    condition = (
+      length(module.artifactory) == 0 &&
+      local.artifactory_url == null &&
+      length(local.jfrog_projects) == 0 &&
+      !contains(keys(local.configuration), "artifactory") &&
+      length(output.jfrog_project_keys) == 0 &&
+      length(output.jfrog_robot_usernames) == 0 &&
+      output.artifactory_repository_keys == null &&
+      length(output.gitlab_project_ids) == length(local.gitlab.projects)
+    )
+    error_message = "GitLab-only mode must not load JFrog configuration or create Artifactory resources and must preserve GitLab projects."
+  }
+}
+
 run "lab01_environment_configuration" {
   command = plan
 
   assert {
     condition = (
-      local.gitlab_base_url == "https://gitlab.lab01.example.internal/api/v4/" &&
+      local.gitlab_base_url == "https://gitlab.com/api/v4/" &&
+      local.gitlab.is_enterprise &&
       local.artifactory_url == "https://jfrog.lab01.example.internal/artifactory" &&
       toset(output.artifactory_repository_keys.local_generic) == toset(["platform-lab01-generic-local"])
     )

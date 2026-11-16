@@ -113,7 +113,12 @@ Each rule accepts `push_access_level`, `merge_access_level`,
 `should_allow_force_push`, and `should_require_code_owner_approval`. Code-owner
 approval requires `is_enterprise = true` and a compatible server license; the
 module does not enable licensing. Community mode uses scalar access levels;
-Enterprise mode uses provider access-level sets.
+Enterprise mode uses provider access-level sets. For GitLab.com, set
+`gitlab.is_enterprise = true` in the environment JSON, including on the Free
+tier, because the service uses the Enterprise API. This selects `allowed_to_push`
+and `allowed_to_merge` instead of the unsupported scalar attributes. It does not
+grant a paid license; leave paid-only policies unconfigured unless your tier
+supports them.
 
 GitLab can automatically protect a default branch. The provider may unprotect and
 reprotect it when adopting the configured rule. Review imports and first applies
@@ -126,8 +131,9 @@ default branch exists before configuring it.
 Each project accepts optional `push_rules`, `labels`, and `mr_approvals` fields.
 Put them alongside `name` and `path` in either a group's or subgroup's `projects`
 map. Omitted or null push rules and MR settings create no resource; `{}` opts in.
-Labels default to an empty map. The supplied lab01 configuration enables none of
-these additions, so existing project and branch-protection defaults are unchanged.
+Labels default to an empty map. The lab01 configuration uses GitLab.com Free,
+so paid-only project MR settings and push rules are omitted on all eight
+projects. Project and branch-protection defaults are unchanged.
 
 Push rules and project MR settings require `gitlab.is_enterprise = true` and a
 compatible licensed GitLab server. Push rules require Premium or Ultimate;
@@ -255,7 +261,8 @@ Both `groups` and `subgroups` accept optional `mr_approvals` and
 `gitlab.is_enterprise` to `true` to opt in; this flag does not activate or verify
 a license. Both APIs require GitLab Premium or Ultimate and a compatible server.
 Use a credential with group ownership and review inherited restrictions before
-configuring subgroup policies. The supplied lab01 JSON does not enable these controls.
+configuring subgroup policies. The lab01 JSON omits paid-only group MR settings
+and protected deployment tiers for GitLab.com Free.
 
 Merge this excerpt into your environment configuration:
 

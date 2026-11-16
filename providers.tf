@@ -7,5 +7,5 @@ provider "artifactory" {
 }
 
 provider "project" {
-  url = trimsuffix(trimsuffix(local.artifactory_url, "/"), "/artifactory")
+  url = var.should_manage_artifactory ? trimsuffix(trimsuffix(local.artifactory_url, "/"), "/artifactory") : null
 }

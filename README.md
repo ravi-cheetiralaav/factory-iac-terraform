@@ -25,13 +25,36 @@ or configured today.
 
 ## Configuration
 
-Edit the two lab01 configuration files:
+The root defaults to GitLab-only mode (`should_manage_artifactory = false`).
+In this mode, `jfrog.json` is not loaded, paired JFrog resources are not created,
+and JFrog credentials are not required. Provider binaries are still installed
+by `terraform init` because both modules remain supported.
+
+Use a normal plan without `-target`:
+
+```powershell
+$env:TF_VAR_environment = 'lab01'
+$env:TF_VAR_should_manage_artifactory = 'false'
+terraform plan -input=false -lock-timeout=5m '-out=gitlab.tfplan'
+terraform show gitlab.tfplan
+terraform apply -input=false -lock-timeout=5m 'gitlab.tfplan'
+```
+
+For combined management, set `TF_VAR_should_manage_artifactory` to `true`
+and supply the JFrog configuration and credentials described below.
+Existing combined deployments must set this to `true` before planning.
+A `moved` block preserves existing Artifactory addresses when enabling the
+optional module. Disabling it when Artifactory resources are already in state
+plans their destruction; it is not a pause switch. Use separate state for
+independent management instead. GitLab module addresses remain unchanged.
+
+Edit the lab01 configuration files (`jfrog.json` is needed only in combined mode):
 
 * [environments/lab01/gitlab.json](environments/lab01/gitlab.json) for the GitLab URL, hierarchy, users, memberships, and policies
 * [environments/lab01/jfrog.json](environments/lab01/jfrog.json) for the Artifactory URL, robot defaults, access, repositories, and optional administration settings
 
 The `e01` and `w01` directories contain only backend configuration for now.
-Add both environment-specific JSON files before planning or applying either one;
+Add `gitlab.json` (and `jfrog.json` for combined mode) before planning or applying either one;
 there is no fallback to lab01 configuration.
 Replace the example endpoints, names, email addresses, and repository keys before
 using them against a real installation.
@@ -307,7 +330,7 @@ saved plans. Restrict access to both.
 
 ## Existing CI Commands
 
-The following is a shell command sequence for your existing pipeline, not a new
+The following is a combined-management shell command sequence for your existing pipeline, not a new
 pipeline definition. Inject credentials beforehand. Use the same checkout,
 environment, provider versions, and backend settings for plan and apply. Complete
 any existing-state migration in the Azure Blob State section before using this
@@ -315,6 +338,7 @@ sequence; `-reconfigure` does not copy state from the old backend.
 
 ```bash
 export TF_VAR_environment=lab01
+export TF_VAR_should_manage_artifactory=true
 export TF_DATA_DIR="$PWD/.terraform-data/${TF_VAR_environment}"
 terraform init -input=false -reconfigure -lockfile=readonly \
   -backend-config="environments/${TF_VAR_environment}/backend.hcl"

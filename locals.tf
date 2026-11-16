@@ -1,10 +1,10 @@
 locals {
   configuration = merge(
     jsondecode(file("${path.module}/environments/${var.environment}/gitlab.json")),
-    jsondecode(file("${path.module}/environments/${var.environment}/jfrog.json"))
+    jsondecode(var.should_manage_artifactory ? file("${path.module}/environments/${var.environment}/jfrog.json") : "{}")
   )
   gitlab_base_url = local.configuration.gitlab_base_url
-  artifactory_url = local.configuration.artifactory_url
+  artifactory_url = var.should_manage_artifactory ? local.configuration.artifactory_url : null
 
   subgroup_entries = flatten([
     for group_key, group in try(local.configuration.gitlab.groups, {}) : [
@@ -79,6 +79,6 @@ locals {
         project.jfrog.robot.email,
         "robot-${try(project.jfrog.key, key)}@${local.configuration.artifactory.defaults.robot_email_domain}"
       )
-    }
+    } if var.should_manage_artifactory
   }
 }
