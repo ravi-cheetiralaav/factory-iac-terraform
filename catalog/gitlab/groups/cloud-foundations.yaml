@@ -1,0 +1,5 @@
+name: Cloud Foundations
+path: cloud-foundations
+description: Cloud Foundations and environment projects
+parent_group: platform-engineering
+archive_on_destroy: true
