@@ -1,0 +1,5 @@
+name: Demo App
+path: demo-app
+group: engineering-knowledge
+description: Demo application repository
+visibility_level: private
