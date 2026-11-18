@@ -1,5 +1,0 @@
-name: Policy-as-code
-path: policy-as-code
-group: security-engineering-sub-group
-description: Policy as code
-visibility_level: private

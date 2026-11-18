@@ -1,5 +1,5 @@
-name: DevSecOps-Sub Group
-path: devsecops
-description: DevSecOps projects
-parent_group: platform
+name: Platform DevSecOps
+path: platform-devsecops
+description: DevSecOps tooling, policy, and compliance projects
+parent_group: platform-engineering
 archive_on_destroy: true

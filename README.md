@@ -118,11 +118,17 @@ process separately using the sensitive token output.
 
 The catalog models the image's hierarchy:
 
-* `Platform Group`
-  * `Environment-Sub Group`: `Platform Iac`, `Environment-Config`, and `Ansible Playbooks`
-  * `DevSecOps-Sub Group`: `DevOps-Tac` and `Bootstrap Scripts`
-  * `CICD-Templates Sub Group`: `gitlab-cicd-templates`
-  * `Security Engineering Sub Group`: `Policy-as-code` and `Compliance-Controls`
+* `platform-engineering` (top-level group)
+  * `platform-devsecops`: `DevOps-Tac`, `Bootstrap Scripts`, `Policy-as-code`, and `Compliance-Controls`
+  * `cloud-foundations`: `Platform Iac`, `Environment-Config`, and `Ansible Playbooks`
+  * `cicd-templates`: `gitlab-cicd-templates`
+  * `engineering-knowledge`
+  * `identity-access-management`
+  * `security-operations`: NSOC, Splunk, and security integrations
+  * `observability-platform`: Dynatrace, monitoring, dashboards, and alerting
+
+The GitLab stack includes `moved` blocks that map the earlier group keys to
+these keys, so existing groups are renamed in place instead of being replaced.
 
 ### GitLab setup
 
@@ -152,9 +158,9 @@ configure runner machines.
 
 GitLab.com does not allow the provider to create a new top-level group. Create
 the top-level group in GitLab and import it at
-`module.group.gitlab_group.this["platform"]` before applying, or use a
+`module.group.gitlab_group.this["platform-engineering"]` before applying, or use a
 self-managed instance where your account can create top-level groups. In this
-catalog, `platform.yaml` defines the top-level group.
+catalog, `platform-engineering.yaml` defines the top-level group.
 
 Project branch protection mode is specified per project. Use `legacy` for
 GitLab CE access-level fields. Use `enterprise` for granular Premium or

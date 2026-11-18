@@ -1,5 +1,5 @@
 name: Ansible Playbooks
 path: ansible-playbooks
-group: environment-sub-group
+group: platform-devsecops
 description: Ansible playbooks
 visibility_level: private

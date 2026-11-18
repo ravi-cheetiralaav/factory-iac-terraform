@@ -1,5 +1,5 @@
 name: Bootstrap Scripts
 path: bootstrap-scripts
-group: devsecops-sub-group
+group: platform-devsecops
 description: Bootstrap scripts
 visibility_level: private

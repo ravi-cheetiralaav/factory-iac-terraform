@@ -21,6 +21,32 @@ module "group" {
   variable_values = var.gitlab_variable_values
 }
 
+# Preserve existing groups after the catalog was renamed to the platform-engineering hierarchy.
+moved {
+  from = module.group.gitlab_group.this["platform"]
+  to   = module.group.gitlab_group.this["platform-engineering"]
+}
+
+moved {
+  from = module.group.gitlab_group.this["devsecops-sub-group"]
+  to   = module.group.gitlab_group.this["platform-devsecops"]
+}
+
+moved {
+  from = module.group.gitlab_group.this["environment-sub-group"]
+  to   = module.group.gitlab_group.this["cloud-foundations"]
+}
+
+moved {
+  from = module.group.gitlab_group.this["cicd-templates-sub-group"]
+  to   = module.group.gitlab_group.this["cicd-templates"]
+}
+
+moved {
+  from = module.group.gitlab_group.this["security-engineering-sub-group"]
+  to   = module.group.gitlab_group.this["security-operations"]
+}
+
 module "project" {
   source   = "../../modules/gitlab-project"
   for_each = local.projects

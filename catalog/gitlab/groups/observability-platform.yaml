@@ -1,0 +1,5 @@
+name: Observability Platform
+path: observability-platform
+description: Dynatrace, monitoring, dashboards, and alerting projects
+parent_group: platform-engineering
+archive_on_destroy: true

@@ -1,5 +1,5 @@
-name: CICD-Templates Sub Group
+name: CICD Templates
 path: cicd-templates
 description: CI/CD template projects
-parent_group: platform
+parent_group: platform-engineering
 archive_on_destroy: true

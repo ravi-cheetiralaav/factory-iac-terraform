@@ -1,5 +1,0 @@
-name: Environment-Config
-path: environment-config
-group: environment-sub-group
-description: Environment configuration
-visibility_level: private

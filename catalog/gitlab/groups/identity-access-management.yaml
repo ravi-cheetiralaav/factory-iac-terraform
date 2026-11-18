@@ -1,0 +1,5 @@
+name: Identity Access Management
+path: identity-access-management
+description: Identity and access management projects
+parent_group: platform-engineering
+archive_on_destroy: true

@@ -1,5 +1,5 @@
-name: Security Engineering Sub Group
-path: security-engineering
-description: Security engineering projects
-parent_group: platform
+name: Security Operations
+path: security-operations
+description: NSOC, Splunk, and security integration projects
+parent_group: platform-engineering
 archive_on_destroy: true
