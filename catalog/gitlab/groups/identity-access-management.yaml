@@ -3,3 +3,20 @@ path: identity-access-management
 description: Identity and access management projects
 parent_group: platform-engineering
 archive_on_destroy: true
+branch_protections:
+  - branch: main
+    allow_force_push: false
+    allowed_to_push:
+      - access_level: maintainer
+    allowed_to_merge:
+      - access_level: maintainer
+    allowed_to_unprotect:
+      - access_level: maintainer
+  - branch: release/*
+    allow_force_push: false
+    allowed_to_push:
+      - access_level: maintainer
+    allowed_to_merge:
+      - access_level: maintainer
+    allowed_to_unprotect:
+      - access_level: maintainer

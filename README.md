@@ -162,14 +162,12 @@ the top-level group in GitLab and import it at
 self-managed instance where your account can create top-level groups. In this
 catalog, `platform-engineering.yaml` defines the top-level group.
 
-Project branch protection mode is specified per project. Use `legacy` for
-GitLab CE access-level fields. Use `enterprise` for granular Premium or
-Ultimate `allowed_to_*` settings. Group YAML files can also declare
-`branch_protections`; these rules apply to projects in the group and require
-GitLab Premium or Ultimate. Project-level protection targets branches in that
-project, while group-level rules can use a branch name or wildcard. The sample
-catalog leaves branch rules, CI/CD variables, and runners unconfigured because
-they are not shown in the image.
+The group and project catalogs protect `main` and `release/*` branches. Both
+allow only Maintainers to push, merge, or unprotect, and disable force-push.
+Project YAML uses `branch_protection_mode: enterprise` for granular
+`allowed_to_*` settings. Group-level protections apply to projects in the group
+and require GitLab Premium or Ultimate. Group and project YAML files can also
+configure CI/CD variables and runners.
 
 The GitLab provider is pinned to version `19.5.0`. See the separate module
 documentation in [modules/gitlab-group/README.md](./modules/gitlab-group/README.md)
