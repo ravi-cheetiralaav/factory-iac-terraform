@@ -11,6 +11,11 @@ locals {
     branch.name => branch
   }
 
+  approval_rules = {
+    for rule in try(var.spec.approval_rules, []) :
+    rule.name => rule
+  }
+
   variables = {
     for item in try(var.spec.variables, []) :
     "${item.key}:${try(item.environment_scope, "*")}" => item

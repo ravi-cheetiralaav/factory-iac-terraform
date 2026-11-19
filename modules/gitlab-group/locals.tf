@@ -3,9 +3,12 @@ locals {
     for member in flatten([
       for group_key, group in var.groups : [
         for member in try(group.members, []) :
-        merge(member, { group_key = group_key })
+        merge(member, {
+          group_key  = group_key
+          member_key = try(member.user_id, null) != null ? tostring(member.user_id) : try("user:${member.username}", "user:")
+        })
       ]
-    ]) : "${member.group_key}:${member.user_id}" => member
+    ]) : "${member.group_key}:${member.member_key}" => member
   }
 
   variables = {

@@ -3,6 +3,17 @@ path: platform-engineering
 description: Platform engineering group
 parent_group: null
 archive_on_destroy: true
+members:
+  - username: hamed.tayebi
+    access_level: maintainer
+  - username: sasidhara.b.navuluri
+    access_level: maintainer
+  - username: arun.gaddam
+    access_level: maintainer
+  - username: ravi.cheetirala
+    access_level: maintainer
+  - username: kevin.co
+    access_level: maintainer
 branch_protections:
   - branch: main
     allow_force_push: false

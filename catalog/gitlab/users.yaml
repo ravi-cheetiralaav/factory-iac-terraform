@@ -1,1 +1,19 @@
-{}
+hamed.tayebi:
+  name: Hamed Tayebi
+  email: hamed.tayebi@accenture.com
+  is_admin: true
+sasidhara.b.navuluri:
+  name: Sasidhara B Navuluri
+  email: sasidhara.b.navuluri@avanade.com
+  is_admin: true
+arun.gaddam:
+  name: Arun Gaddam
+  email: arun.gaddam@accenture.com
+  is_admin: true
+ravi.cheetirala:
+  name: Ravi Cheetirala
+  email: ravi.cheetirala@accenture.com
+  is_admin: true
+kevin.co:
+  name: Kevin Co
+  email: kevin.co@accenture.com

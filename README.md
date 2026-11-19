@@ -193,6 +193,11 @@ sensitive `gitlab_user_passwords` map via `TF_VAR_gitlab_user_passwords` or an
 ignored `terraform.tfvars` file. Explicit passwords are stored in Terraform
 state, so restrict and encrypt state access.
 
+For group access, add `members` to the group YAML using `username` for a
+catalog-managed account or `user_id` for an existing account, plus
+`access_level`. GitLab subgroups inherit membership from their parent group.
+Grant Maintainer on `platform-engineering` to cover the full catalog hierarchy.
+
 Add direct memberships under `members` in the YAML file for the target project.
 Use `username` for a catalog-managed user or `user_id` for an existing user.
 To grant temporary access, set `expires_at` to a future date in `YYYY-MM-DD` format.
