@@ -3,7 +3,7 @@ locals {
 
   members = {
     for member in try(var.spec.members, []) :
-    tostring(member.user_id) => member
+    (try(member.user_id, null) != null ? tostring(member.user_id) : try("user:${member.username}", "user:")) => member
   }
 
   branch_protections = {

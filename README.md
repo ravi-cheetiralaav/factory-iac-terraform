@@ -170,5 +170,62 @@ and require GitLab Premium or Ultimate. Group and project YAML files can also
 configure CI/CD variables and runners.
 
 The GitLab provider is pinned to version `19.5.0`. See the separate module
-documentation in [modules/gitlab-group/README.md](./modules/gitlab-group/README.md)
-and [modules/gitlab-project/README.md](./modules/gitlab-project/README.md).
+documentation in [modules/gitlab-group/README.md](./modules/gitlab-group/README.md),
+[modules/gitlab-project/README.md](./modules/gitlab-project/README.md), and
+[modules/gitlab-user/README.md](./modules/gitlab-user/README.md).
+
+### GitLab users and project memberships
+
+On a GitLab instance where you have admin-level API access, add accounts to
+[`catalog/gitlab/users.yaml`](./catalog/gitlab/users.yaml), keyed by username:
+
+```yaml
+example:
+  name: Example User
+  email: example@example.com
+  is_external: true
+  reset_password: true
+```
+
+GitLab sends a password reset link by default. To set an initial password
+instead, use `password_ref` in the user entry and supply its value in the
+sensitive `gitlab_user_passwords` map via `TF_VAR_gitlab_user_passwords` or an
+ignored `terraform.tfvars` file. Explicit passwords are stored in Terraform
+state, so restrict and encrypt state access.
+
+Add direct memberships under `members` in the YAML file for the target project.
+Use `username` for a catalog-managed user or `user_id` for an existing user.
+To grant temporary access, set `expires_at` to a future date in `YYYY-MM-DD` format.
+
+```yaml
+members:
+  - username: example
+    access_level: guest
+    expires_at: "2027-12-31"
+  - user_id: 1337
+    access_level: guest
+```
+
+### GitLab custom admin roles
+
+Custom admin roles require GitLab Self-Managed Ultimate and an instance
+administrator token. By default, the stack creates no custom admin roles.
+To define a read-only Auditor role, replace the empty map in
+[`catalog/gitlab/admin-roles.yaml`](./catalog/gitlab/admin-roles.yaml) with:
+
+```yaml
+auditor:
+  name: Auditor
+  description: Read-only access to the Admin Area for auditing purposes
+  enabled_permissions:
+    - READ_ADMIN_CICD
+    - READ_ADMIN_GROUPS
+    - READ_ADMIN_MONITORING
+    - READ_ADMIN_PROJECTS
+    - READ_ADMIN_SUBSCRIPTION
+    - READ_ADMIN_USERS
+```
+
+This defines the role without granting access to any user. Assign the role
+separately in GitLab. Keep the `auditor` catalog key stable to preserve its
+Terraform resource address.

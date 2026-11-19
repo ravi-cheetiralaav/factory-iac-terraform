@@ -12,6 +12,21 @@ locals {
     trimsuffix(file, ".yaml") => yamldecode(file("${path.module}/../../catalog/gitlab/projects/${file}"))
   }
 
+  users       = yamldecode(file("${path.module}/../../catalog/gitlab/users.yaml"))
+  admin_roles = yamldecode(file("${path.module}/../../catalog/gitlab/admin-roles.yaml"))
+}
+
+module "user" {
+  source = "../../modules/gitlab-user"
+
+  users       = local.users
+  passwords   = var.gitlab_user_passwords
+  admin_roles = local.admin_roles
+}
+
+moved {
+  from = module.admin_role.gitlab_admin_role.main
+  to   = module.user.gitlab_admin_role.main
 }
 
 module "group" {
@@ -53,6 +68,7 @@ module "project" {
 
   spec            = each.value
   namespace_id    = tonumber(module.group.group_ids[each.value.group])
+  user_ids        = module.user.user_ids
   variable_values = var.gitlab_variable_values
 
   depends_on = [terraform_data.catalog_checks]
@@ -66,6 +82,16 @@ output "group_ids" {
 output "project_ids" {
   description = "GitLab project IDs keyed by catalog filename"
   value       = { for key, project in module.project : key => project.project_id }
+}
+
+output "user_ids" {
+  description = "GitLab user IDs keyed by username"
+  value       = module.user.user_ids
+}
+
+output "admin_role_ids" {
+  description = "GitLab global admin role IDs keyed by catalog identifier"
+  value       = module.user.admin_role_ids
 }
 
 output "runner_tokens" {

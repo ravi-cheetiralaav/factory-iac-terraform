@@ -15,3 +15,10 @@ variable "gitlab_variable_values" {
   sensitive   = true
   default     = {}
 }
+
+variable "gitlab_user_passwords" {
+  description = "Sensitive initial GitLab user passwords keyed by catalog password_ref"
+  type        = map(string)
+  sensitive   = true
+  default     = {}
+}

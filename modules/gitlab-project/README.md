@@ -15,6 +15,7 @@ registrations.
 | --- | --- |
 | `spec` | Decoded configuration from one file under `catalog/gitlab/projects/` |
 | `namespace_id` | Numeric ID of the owning GitLab group |
+| `user_ids` | Numeric IDs keyed by catalog username, used to resolve project memberships |
 | `variable_values` | Sensitive map of values referenced by project CI/CD variables |
 
 ### Outputs
@@ -28,3 +29,9 @@ registrations.
 Branch protection mode is selected in each project YAML file. `legacy` uses
 access-level settings for GitLab CE; `enterprise` uses the more granular
 Premium/Ultimate attributes.
+
+### Direct project memberships
+
+Each `members` entry in the project YAML requires `access_level` and exactly
+one of `user_id` for an existing user or `username` for a catalog-managed
+user. Set `expires_at` in `YYYY-MM-DD` format for temporary access.
