@@ -6,8 +6,8 @@ description: Inputs and outputs for the reusable GitLab project Terraform module
 ## GitLab project module
 
 Creates one GitLab project in a catalog-managed group, including configured
-memberships, branch protections, merge request approval rules, CI/CD variables, and project-scoped runner
-registrations.
+memberships, service accounts, branch protections, merge request approval rules,
+CI/CD variables, and project-scoped runner registrations.
 
 ### Inputs
 
@@ -24,6 +24,7 @@ registrations.
 | --- | --- |
 | `project_id` | GitLab project ID |
 | `full_path` | Full GitLab project path |
+| `service_account_ids` | Numeric service account user IDs keyed by catalog identifier |
 | `runner_tokens` | Sensitive runner authentication tokens; state contains them |
 
 Branch protection mode is selected in each project YAML file. `legacy` uses
@@ -35,6 +36,25 @@ Premium/Ultimate attributes.
 Each `members` entry in the project YAML requires `access_level` and exactly
 one of `user_id` for an existing user or `username` for a catalog-managed
 user. Set `expires_at` in `YYYY-MM-DD` format for temporary access.
+
+### Project service accounts
+
+Add a `service_accounts` map to a project YAML file to provision identities for
+automation. Projects without this map are unchanged.
+
+```yaml
+service_accounts:
+  release_bot:
+    name: Release automation
+    membership:
+      access_level: developer
+```
+
+Keep the map key stable to preserve the account's Terraform address. Omit
+`membership` to create the account without assigning a project role. The stack
+output `project_service_account_ids` groups the account IDs by project catalog
+filename stem. See the [service account module](../gitlab-project-service-account/README.md)
+for prerequisites, optional fields, and token handling.
 
 ### Merge request approval rules
 

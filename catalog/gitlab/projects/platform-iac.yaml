@@ -3,6 +3,9 @@ path: platform-iac
 group: platform-devsecops
 description: Platform infrastructure as code
 visibility_level: private
+service_accounts:
+  platform_iac_automation:
+    name: Platform IaC Automation
 branch_protection_mode: enterprise
 branch_protections:
   - name: main

@@ -60,6 +60,14 @@ output "project_ids" {
   value       = { for key, project in module.project : key => project.project_id }
 }
 
+output "project_service_account_ids" {
+  description = "GitLab service account user IDs keyed by project and service account catalog identifiers"
+  value = {
+    for key, project in module.project : key => project.service_account_ids
+    if length(project.service_account_ids) > 0
+  }
+}
+
 output "user_ids" {
   description = "GitLab user IDs keyed by username"
   value       = module.user.user_ids
