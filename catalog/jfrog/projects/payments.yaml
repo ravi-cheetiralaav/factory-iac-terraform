@@ -1,0 +1,122 @@
+# Payments project. Four access levels. Trusted globals are shared in read-only.
+# DEV here is the JFrog project environment on the repository. It is not a
+# separate prod-deploy role. DEV and PROD Artifactory are separate instances.
+
+key: pay
+display_name: Payments
+description: Payments build artifacts copied from trusted repositories
+storage_gib: 100
+block_deployments_on_limit: false
+email_notification: true
+
+admin_privileges:
+  manage_members: true
+  manage_resources: true
+  manage_remote_repository: false
+  index_resources: true
+
+roles:
+  - name: reader
+    environments: [DEV]
+    actions: [READ_REPOSITORY]
+  - name: annotator
+    environments: [DEV]
+    actions: [READ_REPOSITORY, ANNOTATE_REPOSITORY]
+  - name: engineer
+    environments: [DEV]
+    actions: [READ_REPOSITORY, ANNOTATE_REPOSITORY, DEPLOY_CACHE_REPOSITORY]
+  - name: admin
+    environments: [DEV]
+    actions:
+      - READ_REPOSITORY
+      - ANNOTATE_REPOSITORY
+      - DEPLOY_CACHE_REPOSITORY
+      - DELETE_OVERWRITE_REPOSITORY
+      - MANAGE_XRAY_MD_REPOSITORY
+      - MANAGE_MEMBERS
+      - MANAGE_RESOURCES
+
+groups:
+  - name: pay-readers
+    description: Payments read-only
+    role: reader
+    permissions: [READ]
+  - name: pay-annotators
+    description: Payments read and annotate
+    role: annotator
+    permissions: [READ, ANNOTATE]
+  - name: pay-engineers
+    description: Payments deploy
+    role: engineer
+    permissions: [READ, ANNOTATE, WRITE]
+  - name: pay-admins
+    description: Payments delete and project administration
+    role: admin
+    permissions: [READ, ANNOTATE, WRITE, DELETE, SCAN]
+
+users:
+  - name: pay.reader
+    email: pay.reader@example.com
+    groups: [pay-readers]
+  - name: pay.annotator
+    email: pay.annotator@example.com
+    groups: [pay-annotators]
+  - name: pay.engineer
+    email: pay.engineer@example.com
+    groups: [pay-engineers]
+  - name: pay.admin
+    email: pay.admin@example.com
+    groups: [pay-admins]
+
+service_accounts:
+  - name: robot-pay-ci
+    email: robot-pay-ci@example.com
+    groups: [pay-engineers]
+
+shared_repositories:
+  - key: docker-trusted-local
+    read_only: true
+  - key: maven-trusted-local
+    read_only: true
+  - key: npm-trusted-local
+    read_only: true
+
+local_repositories:
+  - name: docker
+    package_type: docker
+    environment: DEV
+    description: Payments images
+    xray_index: true
+  - name: maven
+    package_type: maven
+    environment: DEV
+    description: Payments Maven artifacts
+    xray_index: true
+  - name: npm
+    package_type: npm
+    environment: DEV
+    description: Payments npm packages
+    xray_index: true
+
+virtual_repositories:
+  - name: docker-local
+    package_type: docker
+    environment: DEV
+    description: Payments images and trusted Docker
+    repositories: [docker, docker-trusted-local]
+    default_deployment_repository: docker
+  - name: maven-local
+    package_type: maven
+    environment: DEV
+    description: Payments Maven and trusted Maven
+    repositories: [maven, maven-trusted-local]
+    default_deployment_repository: maven
+  - name: npm-local
+    package_type: npm
+    environment: DEV
+    description: Payments npm and trusted npm
+    repositories: [npm, npm-trusted-local]
+    default_deployment_repository: npm
+
+xray:
+  enabled: false

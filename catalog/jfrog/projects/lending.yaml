@@ -1,0 +1,105 @@
+key: lend
+display_name: Lending
+description: Lending build artifacts copied from trusted repositories
+storage_gib: 50
+block_deployments_on_limit: false
+email_notification: true
+
+admin_privileges:
+  manage_members: true
+  manage_resources: true
+  manage_remote_repository: false
+  index_resources: true
+
+roles:
+  - name: reader
+    environments: [DEV]
+    actions: [READ_REPOSITORY]
+  - name: annotator
+    environments: [DEV]
+    actions: [READ_REPOSITORY, ANNOTATE_REPOSITORY]
+  - name: engineer
+    environments: [DEV]
+    actions: [READ_REPOSITORY, ANNOTATE_REPOSITORY, DEPLOY_CACHE_REPOSITORY]
+  - name: admin
+    environments: [DEV]
+    actions:
+      - READ_REPOSITORY
+      - ANNOTATE_REPOSITORY
+      - DEPLOY_CACHE_REPOSITORY
+      - DELETE_OVERWRITE_REPOSITORY
+      - MANAGE_XRAY_MD_REPOSITORY
+      - MANAGE_MEMBERS
+      - MANAGE_RESOURCES
+
+groups:
+  - name: lend-readers
+    description: Lending read-only
+    role: reader
+    permissions: [READ]
+  - name: lend-annotators
+    description: Lending read and annotate
+    role: annotator
+    permissions: [READ, ANNOTATE]
+  - name: lend-engineers
+    description: Lending deploy
+    role: engineer
+    permissions: [READ, ANNOTATE, WRITE]
+  - name: lend-admins
+    description: Lending delete and project administration
+    role: admin
+    permissions: [READ, ANNOTATE, WRITE, DELETE, SCAN]
+
+users:
+  - name: lend.reader
+    email: lend.reader@example.com
+    groups: [lend-readers]
+  - name: lend.annotator
+    email: lend.annotator@example.com
+    groups: [lend-annotators]
+  - name: lend.engineer
+    email: lend.engineer@example.com
+    groups: [lend-engineers]
+  - name: lend.admin
+    email: lend.admin@example.com
+    groups: [lend-admins]
+
+service_accounts:
+  - name: robot-lend-ci
+    email: robot-lend-ci@example.com
+    groups: [lend-engineers]
+
+shared_repositories:
+  - key: maven-trusted-local
+    read_only: true
+  - key: generic-trusted-local
+    read_only: true
+
+local_repositories:
+  - name: maven
+    package_type: maven
+    environment: DEV
+    description: Lending Maven artifacts
+    xray_index: true
+  - name: generic
+    package_type: generic
+    environment: DEV
+    description: Lending generic artifacts
+    xray_index: true
+
+virtual_repositories:
+  - name: maven-local
+    package_type: maven
+    environment: DEV
+    description: Lending Maven and trusted Maven
+    repositories: [maven, maven-trusted-local]
+    default_deployment_repository: maven
+  - name: generic-local
+    package_type: generic
+    environment: DEV
+    description: Lending generic files and trusted generic
+    repositories: [generic, generic-trusted-local]
+    default_deployment_repository: generic
+
+xray:
+  enabled: false

@@ -1,0 +1,210 @@
+# Global catalog for the self-hosted GDC Artifactory.
+# Local repositories only. Package types and Xray watches follow
+# JFrog_required_repositories/jfrog-repos.yaml.
+# Terraform providers and Ansible collections are generic repositories.
+# npm and pypi repositories exist. Watches for those two are not created yet.
+# anonymous_read is set on trusted locals only. Quarantine stays closed.
+
+local_repositories:
+  - name: docker-quarantine-local
+    package_type: docker
+    description: Quarantine Docker images
+    xray_index: true
+  - name: docker-trusted-local
+    package_type: docker
+    description: Trusted Docker images after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: helm-quarantine-local
+    package_type: helm
+    description: Quarantine Helm charts
+    xray_index: true
+  - name: helm-trusted-local
+    package_type: helm
+    description: Trusted Helm charts after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: maven-quarantine-local
+    package_type: maven
+    description: Quarantine Maven artifacts
+    xray_index: true
+  - name: maven-trusted-local
+    package_type: maven
+    description: Trusted Maven artifacts after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: npm-quarantine-local
+    package_type: npm
+    description: Quarantine npm packages
+    xray_index: true
+  - name: npm-trusted-local
+    package_type: npm
+    description: Trusted npm packages after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: nuget-quarantine-local
+    package_type: nuget
+    description: Quarantine NuGet packages
+    xray_index: true
+  - name: nuget-trusted-local
+    package_type: nuget
+    description: Trusted NuGet packages after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: pypi-quarantine-local
+    package_type: pypi
+    description: Quarantine PyPI packages
+    xray_index: true
+  - name: pypi-trusted-local
+    package_type: pypi
+    description: Trusted PyPI packages after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: generic-quarantine-local
+    package_type: generic
+    description: Quarantine generic files
+    xray_index: true
+  - name: generic-trusted-local
+    package_type: generic
+    description: Trusted generic files after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: terraform-quarantine-local
+    package_type: generic
+    description: Quarantine Terraform providers
+    xray_index: true
+  - name: terraform-trusted-local
+    package_type: generic
+    description: Trusted Terraform providers after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+  - name: ansible-quarantine-local
+    package_type: generic
+    description: Quarantine Ansible collections and roles
+    xray_index: true
+  - name: ansible-trusted-local
+    package_type: generic
+    description: Trusted Ansible collections and roles after Xray pass
+    xray_index: true
+    anonymous_read: true
+
+groups:
+  - name: jfrog-intake-publishers
+    description: Upload packages and images into quarantine repositories
+  - name: jfrog-artifact-readers
+    description: Read packages and images from trusted repositories
+  - name: jfrog-platform-admins
+    description: Full manage and promote across quarantine and trusted repositories
+
+users:
+  - name: gdc.admin
+    email: gdc.admin@example.com
+    groups: [jfrog-platform-admins]
+  - name: gdc.reader
+    email: gdc.reader@example.com
+    groups: [jfrog-artifact-readers]
+
+service_accounts:
+  - name: jfrog-intake-sa
+    email: jfrog-intake-sa@example.com
+    groups: [jfrog-intake-publishers]
+  - name: jfrog-promote-sa
+    email: jfrog-promote-sa@example.com
+    groups: [jfrog-platform-admins]
+  - name: jfrog-ci-reader
+    email: jfrog-ci-reader@example.com
+    groups: [jfrog-artifact-readers]
+
+permissions:
+  - name: jfrog-quarantine-publishers
+    repositories:
+      - docker-quarantine-local
+      - helm-quarantine-local
+      - maven-quarantine-local
+      - npm-quarantine-local
+      - nuget-quarantine-local
+      - pypi-quarantine-local
+      - generic-quarantine-local
+      - terraform-quarantine-local
+      - ansible-quarantine-local
+    groups:
+      - name: jfrog-intake-publishers
+        permissions: [READ, WRITE, ANNOTATE]
+
+  - name: jfrog-trusted-readers
+    repositories:
+      - docker-trusted-local
+      - helm-trusted-local
+      - maven-trusted-local
+      - npm-trusted-local
+      - nuget-trusted-local
+      - pypi-trusted-local
+      - generic-trusted-local
+      - terraform-trusted-local
+      - ansible-trusted-local
+    groups:
+      - name: jfrog-artifact-readers
+        permissions: [READ]
+
+  - name: jfrog-platform-admins
+    repositories:
+      - docker-quarantine-local
+      - docker-trusted-local
+      - helm-quarantine-local
+      - helm-trusted-local
+      - maven-quarantine-local
+      - maven-trusted-local
+      - npm-quarantine-local
+      - npm-trusted-local
+      - nuget-quarantine-local
+      - nuget-trusted-local
+      - pypi-quarantine-local
+      - pypi-trusted-local
+      - generic-quarantine-local
+      - generic-trusted-local
+      - terraform-quarantine-local
+      - terraform-trusted-local
+      - ansible-quarantine-local
+      - ansible-trusted-local
+    groups:
+      - name: jfrog-platform-admins
+        permissions: [READ, WRITE, ANNOTATE, DELETE, MANAGE]
+
+xray:
+  policies:
+    - name: gdc-security-critical
+      description: Block download of Critical vulnerabilities only
+      min_severity: Critical
+    - name: gdc-malicious-packages
+      description: Block download of known malicious packages
+      malicious_package: true
+  watches:
+    - name: watch-nuget-quarantine
+      repositories: [nuget-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-maven-quarantine
+      repositories: [maven-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-terraform-quarantine
+      repositories: [terraform-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-ansible-quarantine
+      repositories: [ansible-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-generic-quarantine
+      repositories: [generic-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-docker-quarantine
+      repositories: [docker-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]
+    - name: watch-helm-quarantine
+      repositories: [helm-quarantine-local]
+      policies: [gdc-security-critical, gdc-malicious-packages]

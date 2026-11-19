@@ -1,0 +1,8 @@
+gitlab_base_url = "https://gitlab.com/api/v4/"
+
+# Provide values securely through a local, ignored terraform.tfvars file or
+# TF_VAR_gitlab_variable_values. Do not commit variable values or secrets.
+gitlab_variable_values = {}
+
+# Supply initial passwords only when the user catalog specifies a password_ref.
+gitlab_user_passwords = {}

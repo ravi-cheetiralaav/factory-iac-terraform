@@ -1,0 +1,23 @@
+name: Demo App
+path: demo-app
+group: engineering-knowledge
+description: Demo application repository
+visibility_level: private
+branch_protection_mode: enterprise
+branch_protections:
+  - name: main
+    allow_force_push: false
+    allowed_to_push:
+      - access_level: maintainer
+    allowed_to_merge:
+      - access_level: maintainer
+    allowed_to_unprotect:
+      - access_level: maintainer
+  - name: release/*
+    allow_force_push: false
+    allowed_to_push:
+      - access_level: maintainer
+    allowed_to_merge:
+      - access_level: maintainer
+    allowed_to_unprotect:
+      - access_level: maintainer
